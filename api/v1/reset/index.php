@@ -8,8 +8,22 @@ header("Content-type: application/json; charset=utf-8");
 
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    // Irá criar o accounts (array com account)
+    /*
+    --
+    # Reset state before starting tests
+
+    POST /reset
+
+    200 OK
+    */
+
+    $account = new Account();
+    $account->resetAccounts();
     
+    http_response_code(200);
+    echo 'OK';
+    exit();
+
 }
 
 http_response_code(500);

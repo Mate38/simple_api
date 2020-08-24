@@ -1,68 +1,102 @@
 <?php
 
+require_once('../../../App/Config.php');
+
 class Account
 {
-    protected $file = '../Storage/accounts.json';
+    protected $accounts;
 
     protected $account;
 
-    public function __construct( string $account_id )
+    protected $account_id;
+
+    protected $accounts_path;
+
+    public function __construct( $account_id = null )
     {
-        if($account_id != 1234) {
-            $this->account = [
-                'id' => $account_id,
-                'balance' => 1000
-            ];
-        } else {
-            $this->account = null;
-        }
+        $this->accounts_path = (new Config)->getConfig('ACCOUNTS_PATH');
+        $this->accounts = json_decode(file_get_contents($this->accounts_path), true);
+        $this->account = $this->accounts[$account_id] ?? null;
+        $this->account_id = $account_id;
+    }
+
+    public function create($account_id) {
+
+        $this->accounts[strval($account_id)] = [
+            'balance' => 0
+        ];
+
+        file_put_contents($this->accounts_path, json_encode($this->accounts));
+        return $account_id;
+    }
+
+    public function exists() {
+        return $this->account ? true : false;
     }
 
     public function getBalance() {
+
         if($this->account) {
             return $this->account['balance'];
         }
+
         return null;
     }
 
-    public function setBalance($event_type, $amount, $origin = null) {
-
-        if($origin) {
-            $origin_account = new Account($origin);
-            if(!$origin_account) {
-                return null;
-            }
-        }
+    public function getAccount() {
 
         if($this->account) {
-            switch($event_type) {
-                case 'deposit':
-                    $this->increaseBalance($amount);
-                    return $this->balance;
-                case 'withdraw':
-                    $this->decreaseBalance($amount);
-                    return $this->balance;
-                case 'transfer':
-                    $this->transferBalance($amount, $origin_account);
-                default:
-                    return null;
-            }
-        } else {
+            return $this->account;
+        }
+
+        return null;
+    }
+
+    public function deposit($amount, $save = true) {
+
+        $this->account['balance'] += $amount;
+
+        if($save) {
+            $this->saveAccounts();
+        }
+        return $this->account['balance'];
+    }
+
+    public function withdraw($amount, $save = true) {
+
+        $this->account['balance'] -= $amount;
+        
+        if($save) {
+            $this->saveAccounts();
+        }
+        return $this->account['balance'];
+    }
+
+    public function transfer($amount, $origin) {
+
+        $origin_account = new Account($origin);
+        
+        if(!$origin_account->exists()) {
             return null;
         }
+
+        $origin_balance = $origin_account->withdraw($amount, false);
+        $account_balance = $this->deposit($amount, false);
+
+        $this->accounts[$this->account_id] = $this->account;
+        $this->accounts[$origin] = $origin_account->getAccount();
+        file_put_contents($this->accounts_path, json_encode($this->accounts));
+
+        return json_encode(['teste' => 'teste']);
     }
 
-    private function increaseBalance($amount) {
-        $this->account['balance'] += $amount;
+    public function saveAccounts() {
+        $this->accounts[$this->account_id] = $this->account;
+        file_put_contents($this->accounts_path, json_encode($this->accounts));
     }
 
-    private function decreaseBalance($amount) {
-        $this->account['balance'] -= $amount;
-    }
-
-    private function transferBalance($amount, $origin_account) {
-        $origin_account->decreaseBalance($amount);
-        $this->increaseBalance($amount);
+    public function resetAccounts() {
+        file_put_contents($this->accounts_path, '');
     }
 
 }
