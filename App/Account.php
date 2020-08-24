@@ -59,7 +59,13 @@ class Account
         if($save) {
             $this->saveAccounts();
         }
-        return $this->account['balance'];
+        
+        return json_encode([
+            "destination" => [
+                "id" => $this->account_id, 
+                "balance" => $this->account['balance']
+            ]
+        ]);
     }
 
     public function withdraw($amount, $save = true) {
@@ -69,25 +75,41 @@ class Account
         if($save) {
             $this->saveAccounts();
         }
-        return $this->account['balance'];
+
+        return json_encode([
+            "origin" => [
+                "id" => $this->account_id, 
+                "balance" => $this->account['balance']
+            ]
+        ]);
     }
 
-    public function transfer($amount, $origin) {
+    public function transfer($amount, $destination) {
 
-        $origin_account = new Account($origin);
+        $destination_account = new Account($destination);
         
-        if(!$origin_account->exists()) {
-            return null;
+        if(!$destination_account->exists()) {
+            $account_id = $this->create($destination);
+            $destination_account = new Account($account_id);
         }
 
-        $origin_balance = $origin_account->withdraw($amount, false);
-        $account_balance = $this->deposit($amount, false);
+        $account_balance = $this->withdraw($amount, false);
+        $destination_balance = $destination_account->deposit($amount, false);
 
         $this->accounts[$this->account_id] = $this->account;
-        $this->accounts[$origin] = $origin_account->getAccount();
+        $this->accounts[$destination] = $destination_account->getAccount();
         file_put_contents($this->accounts_path, json_encode($this->accounts));
 
-        return json_encode(['teste' => 'teste']);
+        return json_encode([
+            "origin" => [
+                "id" => $this->account_id, 
+                "balance" => $this->account['balance']
+            ],
+            "destination" => [
+                "id" =>  $destination, 
+                "balance" => $destination_account->getBalance()
+            ]
+        ]);
     }
 
     public function saveAccounts() {

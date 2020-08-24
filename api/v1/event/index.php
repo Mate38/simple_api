@@ -42,7 +42,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
     201 {"origin": {"id":"100", "balance":0}, "destination": {"id":"300", "balance":15}}
 
     --
-    # Transfer from non-existing account
+    # Transfer from non-existing account - OK
 
     POST /event {"type":"transfer", "origin":"200", "amount":15, "destination":"300"}
 
@@ -53,33 +53,35 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $type = $post_json['type'];
     $amount = $post_json['amount'];
-    $destination = $post_json['destination'];
+    $destination = $post_json['destination'] ?? null;
     $origin = $post_json['origin'] ?? null;
-
-    $account = new Account($destination);
 
     $return = null;
     if($type == 'deposit') {
+        $account = new Account($destination);
         if(!$account->exists()) {
             $account_id = $account->create($destination);
             $account = new Account($account_id);
         }
         $return = $account->deposit($amount);
-    } 
-    
-    if($account->exists()) {
-        if($type == 'withdraw') {
+    } else if($type == 'withdraw') {
+        $account = new Account($origin);
+        if($account->exists()) {
             $return = $account->withdraw($amount);
-        } else if($type == 'transfer') {
-            $return = $account->transfer($amount, $origin);
         }
-    
-        if($return) {
-            http_response_code(201);
-            echo $return;
-            exit();
+    } else if($type == 'transfer') {
+        $account = new Account($origin);
+        if($account->exists()) {
+            $return = $account->transfer($amount, $destination);
         }
     }
+
+    if($return) {
+        http_response_code(201);
+        echo $return;
+        exit();
+    }
+
     
     http_response_code(404);
     echo 0;
@@ -88,6 +90,5 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 http_response_code(500);
-echo json_encode(['error' => 'Rota inválida']);
 exit();
 

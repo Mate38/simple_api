@@ -10,7 +10,7 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /*
     --
-    # Reset state before starting tests
+    # Reset state before starting tests - OK
 
     POST /reset
 
@@ -27,6 +27,5 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 http_response_code(500);
-echo json_encode(['error' => 'Rota inválida']);
 exit();
 
