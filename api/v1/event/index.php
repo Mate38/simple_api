@@ -49,13 +49,21 @@ if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     404 0
     */
-    http_response_code(201);
-    echo json_encode([
-        'destination' => [
-            'id' => '100',
-            'balance' => 10
-        ]
-    ]);
+    $type = $_POST['type'];
+    $amount = $_POST['amount'];
+    $destination = $_POST['destination'];
+    $origin = $_POST['origin'];
+
+    $account = new Account($destination);
+
+    if($balance = $account->setBalance($type, $amount, $origin)) {
+        http_response_code(200);
+        echo $balance;
+        exit();
+    }
+
+    http_response_code(404);
+    echo 0;
     exit();
 
 }

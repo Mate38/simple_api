@@ -2,8 +2,6 @@
 
 require_once('../../../App/Account.php');
 
-$account = new Account('100', 1000);
-
 ob_clean();
 header_remove();
 header("Content-type: application/json; charset=utf-8");
@@ -27,11 +25,17 @@ if($_SERVER['REQUEST_METHOD'] === 'GET') {
 
         200 20
         */
-        if($_GET['account_id'] == 1234) {
-            http_response_code(404);
-            echo 0;
+        $account = new Account($_GET['account_id']);
+        
+        if($balance = $account->getBalance()) {
+            http_response_code(200);
+            echo $balance;
             exit();
         }
+
+        http_response_code(404);
+        echo 0;
+        exit();
 
     }
 
