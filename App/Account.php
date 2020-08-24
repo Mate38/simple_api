@@ -2,6 +2,8 @@
 
 class Account
 {
+    protected $file = '../Storage/accounts.json';
+
     protected $account;
 
     public function __construct( string $account_id )
@@ -18,7 +20,7 @@ class Account
 
     public function getBalance() {
         if($this->account) {
-            return $this->account->balance;
+            return $this->account['balance'];
         }
         return null;
     }
@@ -42,6 +44,8 @@ class Account
                     return $this->balance;
                 case 'transfer':
                     $this->transferBalance($amount, $origin_account);
+                default:
+                    return null;
             }
         } else {
             return null;
@@ -49,11 +53,11 @@ class Account
     }
 
     private function increaseBalance($amount) {
-        $this->balance += $amount;
+        $this->account['balance'] += $amount;
     }
 
     private function decreaseBalance($amount) {
-        $this->balance -= $amount;
+        $this->account['balance'] -= $amount;
     }
 
     private function transferBalance($amount, $origin_account) {
