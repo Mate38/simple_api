@@ -2,10 +2,6 @@
 
 require_once('../../../App/Account.php');
 
-ob_clean();
-header_remove();
-header("Content-type: application/json; charset=utf-8");
-
 if($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /*
